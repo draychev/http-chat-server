@@ -6,4 +6,4 @@ build:
 
 .PHONY: run
 run: build
-	./bin/http-chat-server
+	HTTPCHATSERVER_PORT_NUMBER=8181 ./bin/http-chat-server

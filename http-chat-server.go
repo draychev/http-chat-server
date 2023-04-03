@@ -2,12 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
 const (
+	envVarPortNumberKey = "HTTPCHATSERVER_PORT_NUMBER"
+
 	activeUntil = 10 * time.Second
 )
 
@@ -61,7 +65,10 @@ func (cr *ChatRoom) RecordPing(ping Ping) {
 }
 
 func main() {
-	chatRoom := &ChatRoom{messages: make([]Message, 0)}
+	chatRoom := &ChatRoom{
+		messages: make([]Message, 0),
+		users:    make(map[UserName]*User),
+	}
 
 	http.HandleFunc("/messages", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
@@ -82,8 +89,9 @@ func main() {
 			message.TimeSent = time.Now()
 			chatRoom.AddMessage(message)
 			w.WriteHeader(http.StatusCreated)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	})
 
 	http.HandleFunc("/users", func(w http.ResponseWriter, r *http.Request) {
@@ -109,9 +117,14 @@ func main() {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		log.Printf("Received a PING: %s", ping)
 		chatRoom.RecordPing(ping)
 		w.WriteHeader(http.StatusCreated)
 	})
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	if portNumber := os.Getenv(envVarPortNumberKey); portNumber == "" {
+		log.Fatalf("Environment variable %s is required", envVarPortNumberKey)
+	} else {
+		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", portNumber), nil))
+	}
 }
