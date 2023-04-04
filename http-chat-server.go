@@ -128,6 +128,6 @@ func main() {
 	if portNumber := os.Getenv(envVarPortNumberKey); portNumber == "" {
 		log.Fatal().Msgf("Environment variable %s is required", envVarPortNumberKey)
 	} else {
-		log.Fatal().Msg(http.ListenAndServe(fmt.Sprintf(":%s", portNumber), nil))
+		log.Fatal().Err(http.ListenAndServe(fmt.Sprintf(":%s", portNumber), nil)).Msg("Error starting server")
 	}
 }
