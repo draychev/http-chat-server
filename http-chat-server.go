@@ -3,11 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/openservicemesh/osm/pkg/logger"
 )
+
+var log = logger.New("http-chat-server")
 
 const (
 	envVarPortNumberKey = "HTTPCHATSERVER_PORT_NUMBER"
@@ -117,14 +120,14 @@ func main() {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		log.Printf("Received a PING: %s", ping)
+		log.Info().Msgf("Received a PING: %s", ping)
 		chatRoom.RecordPing(ping)
 		w.WriteHeader(http.StatusCreated)
 	})
 
 	if portNumber := os.Getenv(envVarPortNumberKey); portNumber == "" {
-		log.Fatalf("Environment variable %s is required", envVarPortNumberKey)
+		log.Fatal().Msgf("Environment variable %s is required", envVarPortNumberKey)
 	} else {
-		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", portNumber), nil))
+		log.Fatal().Msg(http.ListenAndServe(fmt.Sprintf(":%s", portNumber), nil))
 	}
 }
